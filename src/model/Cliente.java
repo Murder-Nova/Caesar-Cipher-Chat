@@ -1,65 +1,119 @@
 package model;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.IOException;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Cliente {
 
-	/**
-	 * 
-	 * Direccion local de la maquina
-	 */
-	public static final String LOCAL_HOST = "192.168.0.15";
-	/**
-	 * Puerto por donde se establecera la conexion
-	 */
+	//Direccion ip local
+	public static final String LOCAL_HOST = "localhost";
+
+	//Puerto donde se establece la conexión
 	public static final int PORT = 8000;
-	/**
-	 * Socket que permitira la conexion con el servidor
-	 */
+
+	//Socket que permite la conexión con el Servidor
 	private static Socket socket;
 
-	/**
-	 * Main
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
-		DataInputStream in;
-		DataOutputStream out;
+		Scanner scanner = new Scanner(System.in);
+		DataInputStream in = new DataInputStream(socket.getInputStream());
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-		try {
+		// Hilo necesario para enviar mensajes
+		Thread envioMensaje = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
 
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+					// Guarda el mensaje que escriba el cliente
+					String mensaje = scanner.nextLine();
 
-			System.out.println(
-					"::: Cliente disponible para ser atendido :::"+"\n Por favor ingrese la palabra que desea encriptar");
+					try {
+						// Escribe el mensaje utilizando el Output Stream
+						out.writeUTF(mensaje);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
 
-			socket = new Socket(LOCAL_HOST, PORT);
-			String mensaje = br.readLine();
-			in = new DataInputStream(socket.getInputStream());
-			out = new DataOutputStream(socket.getOutputStream());
-			out.writeUTF(mensaje);
-			String mensajeDelServidor = in.readUTF();
-			bw.write("La suma es : " + mensajeDelServidor);
-			bw.flush();
-			bw.close();
-			br.close();
-			socket.close();
-			in.close();
-			out.close();
+		// Hilo necesario para leer mensajes
+		Thread lecturaMensaje = new Thread(new Runnable() {
+			@Override
+			public void run() {
 
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+				while (true) {
+					try {
+						// Lee el mensaje recibido por el cliente y posteriormente lo imprime
+						String msg = in.readUTF();
+						System.out.println(msg);
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+
+		envioMensaje.start();
+		lecturaMensaje.start();
 
 	}
+	
+	/**
+	 * Este método se encarga de descifrar la palabra recibida utilizando cifrado Cesar inverso
+	 * 
+	 * @param cipherText  es la palabra que se desea cifrar, enviada por un cliente
+	 * @param shift es la llave de cifrado entre 1 y 20 que se va a utilizar, el
+	 *              número de posiciones que se mueven
+	 * @return retorna un String con la palabra descifrada
+	 */
+	private static String descifrarCesar(String cipherText, int shift) {
+		//La palabra descifrada que se retornará después
+		String decryptedText = "";
+		// Se utiliza una variable tipo char para cifrar la palabra letra por letra
+		char letter;
 
+		for (int i = 0; i < cipherText.length(); i++) {
+			letter = cipherText.charAt(i);
+
+			// Primero se comprueba si la letra en la posición i está en minúscula
+			if (letter >= 'a' && letter <= 'z') {
+				// Se corre de posición hacia la izquierda la letra según la llave de cifrado
+				letter = (char) (letter - shift);
+
+				// Si el valor en ASCII de letter es menor a 'a' significa que se desbordó del abecedario en minúscula
+				// Por consiguiente, se debe reiniciar la cuenta, haciendo que 'z' sea anterior a 'a'
+				if (letter < 'a') {
+					letter = (char) (letter - 'a' + 'z' + 1);
+				}
+				cipherText = cipherText + letter;
+			}
+
+			// Se comprueba si la letra en la posición i está en mayúscula
+			else if (letter >= 'A' && letter <= 'Z') {
+				// Se corre de posición hacia la izquierda la letra según la llave de cifrado
+				letter = (char) (letter - shift);
+
+				// Si el valor en ASCII de letter es menor a 'A' significa que se desbordó del abecedario en mayúscula
+				// Por consiguiente, se debe reiniciar la cuenta, haciendo que 'Z' sea anterior a 'A'
+				if (letter < 'A') {
+					letter = (char) (letter - 'A' + 'Z' + 1);
+				}
+				cipherText = cipherText + letter;
+			}
+
+			// Si letter no es una letra del abecedario, entonces simplemente se concatena a la palabra descifrada
+			else {
+				cipherText = cipherText + letter;
+			}
+		}
+
+		return decryptedText;
+	}
 }
