@@ -126,8 +126,9 @@ public class Servidor {
 	 * @return retorna un String con la palabra descifrada
 	 */
 	private static String descifrarCesar(String cipherText, int shift) {
-
+		//La palabra descifrada que se retornará después
 		String decryptedText = "";
+		// Se utiliza una variable tipo char para cifrar la palabra letra por letra
 		char letter;
 
 		for (int i = 0; i < cipherText.length(); i++) {
@@ -154,7 +155,7 @@ public class Servidor {
 				// Si el valor en ASCII de letter es menor a 'A' significa que se desbordó del abecedario en mayúscula
 				// Por consiguiente, se debe reiniciar la cuenta, haciendo que 'Z' sea anterior a 'A'
 				if (letter < 'A') {
-					letter = (char) (letter + 'A' - 'Z' - 1);
+					letter = (char) (letter - 'A' + 'Z' + 1);
 				}
 				cipherText = cipherText + letter;
 			}
