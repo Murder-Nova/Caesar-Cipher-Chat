@@ -10,7 +10,7 @@ import java.util.Vector;
 public class Servidor {
 
 	// Puerto por donde el servidor atendera a los clientes
-	public static final int PORT = 8000;
+	public static final int PORT = 25000;
 
 	// Vector para almacenar a los clientes activos
 	static Vector<Regulador> activeClients = new Vector<>();

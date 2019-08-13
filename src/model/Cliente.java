@@ -12,7 +12,7 @@ public class Cliente {
 	public static final String LOCAL_HOST = "localhost";
 
 	//Puerto donde se establece la conexión
-	public static final int PORT = 8000;
+	public static final int PORT = 25000;
 
 	//Socket que permite la conexión con el Servidor
 	private static Socket socket;
@@ -20,6 +20,7 @@ public class Cliente {
 	public static void main(String[] args) throws IOException {
 
 		Scanner scanner = new Scanner(System.in);
+		socket = new Socket(LOCAL_HOST,PORT);
 		DataInputStream in = new DataInputStream(socket.getInputStream());
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
